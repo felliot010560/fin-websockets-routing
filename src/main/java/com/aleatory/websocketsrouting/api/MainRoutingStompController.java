@@ -25,9 +25,6 @@ public class MainRoutingStompController {
     @EventListener
     private void sendToFrontEnd(SendMessageToFrontendEvent event) {
         logger.debug("Frontend: Sending {} to {}", event.getPayload(), event.getDestination());
-        if( event.getDestination().equals("/topic/trading/condor.bid")) {
-        	logger.info("Got it.");
-        }
         messagingTemplate.convertAndSend(event.getDestination(), event.getPayload());
         lastMessages.put(event.getDestination(), event.getPayload());
     }
