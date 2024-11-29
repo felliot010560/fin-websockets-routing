@@ -65,6 +65,9 @@ public class MainRoutingRestController {
 		}
 		Stock spx = new Stock();
 		spx.setName("SPX");
+		if( positions == null ) {
+			return new CondorPosition[0];
+		}
 		for (CondorPosition position : positions) {
 			for (OptionPosition leg : position.getLegs()) {
 				leg.getOption().setUnderlying(spx);

@@ -1,5 +1,7 @@
 package com.aleatory.websocketsrouting.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.EnableCaching;
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 @EnableCaching
 @EnableAsync
 public class CacheConfig {
+	private final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
     @Value("${spring.redis.host}")
     private String REDIS_HOSTNAME;
 
@@ -35,6 +38,7 @@ public class CacheConfig {
     
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
+    	logger.info("Will connect to Redis server on {}:{}", REDIS_HOSTNAME, REDIS_PORT);
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(REDIS_HOSTNAME, REDIS_PORT);
         JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder().build();
         JedisConnectionFactory factory = new JedisConnectionFactory(configuration, jedisClientConfiguration);
