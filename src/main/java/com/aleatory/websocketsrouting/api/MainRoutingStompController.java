@@ -15,7 +15,8 @@ import com.aleatory.websocketsrouting.events.SendMessageToFrontendEvent;
 
 @Service
 public class MainRoutingStompController {
-    private static final Logger logger = LoggerFactory.getLogger(MainRoutingStompController.class);
+    @SuppressWarnings("unused")
+	private static final Logger logger = LoggerFactory.getLogger(MainRoutingStompController.class);
 
     @Autowired
     protected MessageSendingOperations<String> messagingTemplate;
@@ -24,7 +25,6 @@ public class MainRoutingStompController {
 
     @EventListener
     private void sendToFrontEnd(SendMessageToFrontendEvent event) {
-        logger.debug("Frontend: Sending {} to {}", event.getPayload(), event.getDestination());
         messagingTemplate.convertAndSend(event.getDestination(), event.getPayload());
         lastMessages.put(event.getDestination(), event.getPayload());
     }
