@@ -34,7 +34,7 @@ public class SPXHistoryDao {
 	private static final String INSERT_SPX_CLOSE_SQL = "INSERT INTO public.spx_history (trade_date, close, is_final) VALUES (:forDate, :price, :finalPrice)\n"
 			+ "	ON CONFLICT (trade_date) "
 			+ "DO UPDATE SET close=:price, is_final=:finalPrice "
-			+ "WHERE (:finalPrice OR NOT spx_history.is_final) AND CURRENT_DATE > :forDate;";
+			+ "WHERE NOT spx_history.is_final OR CURRENT_DATE > :forDate;";
 	
 	private static final String ALL_SPX_CLOSE_DATES_QUERY = "SELECT trade_date, close, is_final FROM spx_history ORDER BY trade_date DESC;";
 

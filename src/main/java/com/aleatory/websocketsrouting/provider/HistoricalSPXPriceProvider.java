@@ -37,6 +37,11 @@ import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
  * we can do expirations). It does a check 1 minute after the SPX close in order to expire the
  * condor for the day (if any) and also checks all the dates as far back as Yahoo Finance has
  * historical data for SPX closes.
+ * 
+ * Note: this class is <b>not</b> the source of yesterday's close for change calculations or 
+ * for determining if there was a >1% move. That comes from IB via the pricing server. This
+ * class supplies only historical closes and (at closing time) a pretty good close price that is
+ * not the last for expiring options.
  */
 @Component
 public class HistoricalSPXPriceProvider {
@@ -156,9 +161,16 @@ public class HistoricalSPXPriceProvider {
     	Double price;
 		for (int i=0; i < numDays && i < elements.size(); i++) {
 			Element element = elements.get(i);
-			Element dateElement = element.select("td:nth-child(1)").get(0);
-			Element priceElement = element.select("td:nth-child(6)").get(0);
-			String dateStr = dateElement.text();
+			Element dateElement = null;
+			Element priceElement = null;
+			try {
+				dateElement = element.select("td:nth-child(1)").get(0);
+				priceElement = element.select("td:nth-child(6)").get(0);
+			} catch (Exception e) {
+				logger.warn("Exception while reading table row, row was:\n{}", element);
+				continue;
+			}
+			String dateStr = dateElement.text();;
 			Date closeDate;
 			try {
 				closeDate = parser.parse(dateStr);
