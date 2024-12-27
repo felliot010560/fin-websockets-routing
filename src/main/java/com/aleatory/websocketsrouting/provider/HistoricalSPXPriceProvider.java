@@ -59,13 +59,23 @@ public class HistoricalSPXPriceProvider {
     
     @EventListener(ApplicationReadyEvent.class)
     private void scheduleYahooCloseFetch() {
-    	ZonedDateTime nextClose = TradingDays.todaySPXCloseTime().plus(1,ChronoUnit.MINUTES);
+    	scheduleCheckPriceAtClose();
+    	checkAllPreviousCloses();
+    }
+    
+    private void scheduleCheckPriceAtClose() {
+    	ZonedDateTime nextClose = TradingDays.todaySPXCloseTime();
+    	if( ZonedDateTime.now().isAfter(nextClose) ) {
+    		nextClose = TradingDays.nextSPXCloseTime();
+    	}
+    	//Make it 3:01 (or 12:01 for a half-day).
+    	nextClose = nextClose.plus(1, ChronoUnit.MINUTES);
     	Instant closeInstant = nextClose.toInstant();
     	logger.info("Will get next close from web at {}", nextClose);
     	scheduler.schedule(() -> {
     		checkClosePriceAtClose();
+    		scheduleCheckPriceAtClose();
     	}, closeInstant);
-    	checkAllPreviousCloses();
     }
     
     /**
@@ -99,6 +109,10 @@ public class HistoricalSPXPriceProvider {
      */
     private void checkAllPreviousCloses() {
     	List<ClosePrice> closePrices = connectToYahooForClose(100);
+    	//Error occurred
+    	if( closePrices == null ) {
+    		return;
+    	}
     	Map<LocalDate, ClosePrice> dbClosePrices = dao.fetchAllSPXCloses();
     	for( int i = 0; i < closePrices.size(); i++ ) {
     		ClosePrice closePrice = closePrices.get(i);
