@@ -34,3 +34,5 @@ build/
 
 /lib/
 /logs/
+
+/sensitive.txt
