@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.aleatory.common.domain.CondorPosition;
 import com.aleatory.common.domain.OptionPosition;
+import com.aleatory.websocketsrouting.WebsocketsRoutingApplication;
 import com.aleatory.websocketsrouting.exceptions.CouldNotConnectToPortfolioException;
 
 @RestController
@@ -83,6 +84,13 @@ public class MainRoutingRestController {
     @ResponseBody
     public void reloadPortfolio() {
         restTemplate.postForEntity(PORTFOLIO_SERVER_URL + "/reload", null, Void.class);
+    }
+    
+    @PostMapping("/restart")
+    @CrossOrigin(origins = { "http://localhost:3000", "http://192.168.68.51:3030" }, allowCredentials = "true")
+    @ResponseBody
+    public void restart() {
+        WebsocketsRoutingApplication.restart(WebsocketsRoutingApplication.class);
     }
 
 }

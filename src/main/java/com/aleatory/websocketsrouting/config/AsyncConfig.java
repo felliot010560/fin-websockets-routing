@@ -27,4 +27,11 @@ public class AsyncConfig implements AsyncConfigurer {
         scheduler.setPoolSize(10);
         return scheduler;
     }
+    
+    @Bean
+    public TaskScheduler apiScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5);
+        return scheduler;
+    }
 }

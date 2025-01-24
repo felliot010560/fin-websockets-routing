@@ -1,5 +1,6 @@
 package com.aleatory.websocketsrouting;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -9,12 +10,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.event.EventListener;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
+import com.aleatory.common.app.RestartableApplication;
+
 @SpringBootApplication
-public class WebsocketsRoutingApplication {
+public class WebsocketsRoutingApplication extends RestartableApplication {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketsRoutingApplication.class);
 
     public static void main(String[] args) {
-        SpringApplication.run(WebsocketsRoutingApplication.class, args);
+        logger.info("Starting condors backend application at {}.", LocalDateTime.now());
+        context = SpringApplication.run(WebsocketsRoutingApplication.class, args);
+        scheduleRestart(WebsocketsRoutingApplication.class);
     }
 
     @EventListener
