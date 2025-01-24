@@ -20,7 +20,6 @@ public class WebsocketsBackendMessagingClient extends WebsocketsPubSubMessagingO
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 
-
     public WebsocketsBackendMessagingClient(String serverName, String[] topics) {
         super(serverName, null);
         for (String topic : topics) {

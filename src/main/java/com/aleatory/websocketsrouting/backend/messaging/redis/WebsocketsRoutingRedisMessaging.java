@@ -20,20 +20,20 @@ public class WebsocketsRoutingRedisMessaging extends RedisPubSubMessagingOperati
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
-    
-    //We don't resend these to the front end--they're purely backend topics
+
+    // We don't resend these to the front end--they're purely backend topics
     private List<String> excludedTopics = new ArrayList<>();
-    
+
     public WebsocketsRoutingRedisMessaging() {
         excludedTopics.add("/topic/prices.current.condor.full");
     }
 
     @Override
     public void receiveMessages(String topic, Object payload) {
-        if( excludedTopics.contains(topic) ) {
+        if (excludedTopics.contains(topic)) {
             return;
         }
-        if( !handlers.containsKey(topic)) {
+        if (!handlers.containsKey(topic)) {
             logger.info("Adding new topic {}", topic);
             handlers.put(topic, (message) -> applicationEventPublisher.publishEvent(new SendMessageToFrontendEvent(this, topic, message)));
         }

@@ -11,17 +11,17 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 @SpringBootApplication
 public class WebsocketsRoutingApplication {
-	private static final Logger logger = LoggerFactory.getLogger(WebsocketsRoutingApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketsRoutingApplication.class);
 
-	public static void main(String[] args) {
-		SpringApplication.run(WebsocketsRoutingApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(WebsocketsRoutingApplication.class, args);
+    }
 
-	@EventListener
-	private void handleSubscribeEvent(SessionSubscribeEvent event) {
-		Map<?, ?> headers = (Map<?, ?>) event.getMessage().getHeaders().get("nativeHeaders");
-		String destination = headers.get("destination").toString();
-		logger.info("Got session subscribe event for topic {}", destination);
-	}
+    @EventListener
+    private void handleSubscribeEvent(SessionSubscribeEvent event) {
+        Map<?, ?> headers = (Map<?, ?>) event.getMessage().getHeaders().get("nativeHeaders");
+        String destination = headers.get("destination").toString();
+        logger.info("Got session subscribe event for topic {}", destination);
+    }
 
 }

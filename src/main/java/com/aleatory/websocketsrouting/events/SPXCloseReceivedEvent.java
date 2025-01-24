@@ -5,29 +5,29 @@ import java.time.LocalDate;
 import org.springframework.context.ApplicationEvent;
 
 public class SPXCloseReceivedEvent extends ApplicationEvent {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private Double price;
-	private LocalDate forDate;
-	private boolean finalPrice;
+    private Double price;
+    private LocalDate forDate;
+    private boolean finalPrice;
 
-	public SPXCloseReceivedEvent(Object source, Double price, LocalDate forDate, boolean finalPrice) {
-		super(source);
-		this.price = price;
-		this.forDate = forDate;
-		this.finalPrice = finalPrice;
-	}
+    public SPXCloseReceivedEvent(Object source, Double price, LocalDate forDate, boolean finalPrice) {
+        super(source);
+        this.price = price;
+        this.forDate = forDate;
+        this.finalPrice = finalPrice;
+    }
 
-	public Double getPrice() {
-		return price;
-	}
+    public Double getPrice() {
+        return price;
+    }
 
-	public LocalDate getForDate() {
-		return forDate;
-	}
-	
-	public boolean isFinalPrice() {
-		return finalPrice;
-	}
+    public LocalDate getForDate() {
+        return forDate;
+    }
+
+    public boolean isFinalPrice() {
+        return finalPrice;
+    }
 
 }

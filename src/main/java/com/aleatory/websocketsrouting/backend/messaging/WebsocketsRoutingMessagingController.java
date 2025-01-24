@@ -23,18 +23,18 @@ import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
  */
 @Service
 public class WebsocketsRoutingMessagingController {
-	private static final Logger logger = LoggerFactory.getLogger(WebsocketsRoutingMessagingController.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketsRoutingMessagingController.class);
 
-	@Autowired
-	private PubSubMessagingOperations messagingOperations;
+    @Autowired
+    private PubSubMessagingOperations messagingOperations;
 
-	@EventListener
-	private void sendSPXClose(SPXCloseReceivedEvent event) {
-		WireClose wireClose = new WireClose();
-		wireClose.setSymbol("SPX");
-		wireClose.setForDay(event.getForDate());
-		wireClose.setClose(event.getPrice());
-		logger.info("Sending SPX close of {} for day {}", wireClose.getClose(), wireClose.getForDay());
-		messagingOperations.publishMessage("/topic/prices.spx.close", wireClose);
-	}
+    @EventListener
+    private void sendSPXClose(SPXCloseReceivedEvent event) {
+        WireClose wireClose = new WireClose();
+        wireClose.setSymbol("SPX");
+        wireClose.setForDay(event.getForDate());
+        wireClose.setClose(event.getPrice());
+        logger.info("Sending SPX close of {} for day {}", wireClose.getClose(), wireClose.getForDay());
+        messagingOperations.publishMessage("/topic/prices.spx.close", wireClose);
+    }
 }

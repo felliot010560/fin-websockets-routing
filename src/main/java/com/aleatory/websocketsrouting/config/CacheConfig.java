@@ -29,16 +29,16 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 @EnableCaching
 @EnableAsync
 public class CacheConfig {
-	private final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
+    private final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
     @Value("${spring.redis.host}")
     private String REDIS_HOSTNAME;
 
     @Value("${spring.redis.port}")
     private int REDIS_PORT;
-    
+
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
-    	logger.info("Will connect to Redis server on {}:{}", REDIS_HOSTNAME, REDIS_PORT);
+        logger.info("Will connect to Redis server on {}:{}", REDIS_HOSTNAME, REDIS_PORT);
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(REDIS_HOSTNAME, REDIS_PORT);
         JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder().build();
         JedisConnectionFactory factory = new JedisConnectionFactory(configuration, jedisClientConfiguration);

@@ -10,18 +10,21 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import com.aleatory.websocketsrouting.events.SendMessageToFrontendEvent;
 
 /**
- * For portfolio, we don't know the topics in advance, so we have to dynamically subscribe to them as
- * they come in.
+ * For portfolio, we don't know the topics in advance, so we have to dynamically
+ * subscribe to them as they come in.
  */
 public class PortfolioWebsocketsBackendMessagingClient extends WebsocketsBackendMessagingClient {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketsBackendMessagingClient.class);
     private static final String CONDORS_TICK_TOPIC_PREFIX = "/topic/prices.condor.portfolio.";
+
     public PortfolioWebsocketsBackendMessagingClient() {
         super("portfolio", new String[0]);
     }
 
     /**
-     * If the frontend asks for a portfolio condor or portfolio condor leg option, subscribe to the portfolio server
+     * If the frontend asks for a portfolio condor or portfolio condor leg option,
+     * subscribe to the portfolio server
+     * 
      * @param event
      */
     @EventListener

@@ -16,11 +16,10 @@ public class AsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {
-	ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-	executor.setCorePoolSize(10);
-	return executor;
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        return executor;
     }
-
 
     @Bean
     public TaskScheduler messagingScheduler() {

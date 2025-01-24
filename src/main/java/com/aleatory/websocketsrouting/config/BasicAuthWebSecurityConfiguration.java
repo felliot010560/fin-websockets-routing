@@ -26,40 +26,38 @@ public class BasicAuthWebSecurityConfiguration {
 
     @Value("${spring.profiles.active:none}")
     private String profile;
-    
+
     @Value("${app.security.username}")
     private String username;
-    
+
     @Value("${app.security.password}")
     private String password;
 
     @Bean
     @Profile("!dev")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-	http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").hasRole("USER_ROLE")).formLogin(Customizer.withDefaults())
-		.httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
-	return http.build();
+        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").hasRole("USER_ROLE")).formLogin(Customizer.withDefaults())
+                .httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
+        return http.build();
     }
 
     @Bean
     @Profile("dev")
     public SecurityFilterChain filterChainDev(HttpSecurity http) throws Exception {
-	http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll().anyRequest().authenticated())
-		.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
-	return http.build();
+        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll().anyRequest().authenticated())
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
+        return http.build();
     }
 
     @Bean
     @Profile("!dev")
     public InMemoryUserDetailsManager userDetailsService() {
-	UserDetails user = User.withUsername(username).
-				password(passwordEncoder().encode(password)).
-				roles("USER_ROLE").build();
-	return new InMemoryUserDetailsManager(user);
+        UserDetails user = User.withUsername(username).password(passwordEncoder().encode(password)).roles("USER_ROLE").build();
+        return new InMemoryUserDetailsManager(user);
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-	return new BCryptPasswordEncoder(8);
+        return new BCryptPasswordEncoder(8);
     }
 }
