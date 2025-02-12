@@ -32,7 +32,11 @@ public class MainRoutingStompController {
     @EventListener
     private void sendLastMessageToFrontEndOnSubscription(SessionSubscribeEvent event) {
         Map<?, ?> headers = (Map<?, ?>) event.getMessage().getHeaders().get("nativeHeaders");
-        String destination = headers.get("destination").toString();
+        String destHeader = headers.get("destination").toString();
+        if( destHeader == null ) {
+            return;
+        }
+        String destination = destHeader.substring(1, destHeader.length()-1);
         Object message = lastMessages.get(destination);
         if (message == null) {
             return;
