@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -110,6 +111,7 @@ public class HistoricalSPXPriceProvider {
      * running for a day or two.
      */
     private void checkAllPreviousCloses() {
+        logger.info("Checking previous closes 100 days back.");
         List<ClosePrice> closePrices = connectToYahooForClose(100);
         // Error occurred
         if (closePrices == null) {
@@ -118,7 +120,8 @@ public class HistoricalSPXPriceProvider {
         Map<LocalDate, ClosePrice> dbClosePrices = dao.fetchAllSPXCloses();
         for (int i = 0; i < closePrices.size(); i++) {
             ClosePrice closePrice = closePrices.get(i);
-            if (LocalDate.now().equals(closePrice.getCloseDate())) {
+            //Is it today's? If so, only check it if the market is closed today.
+            if (LocalDate.now().equals(closePrice.getCloseDate()) && TradingDays.indexClosingTime().isAfter(LocalTime.now())) {
                 continue;
             }
             ClosePrice dbClosePrice = dbClosePrices.get(closePrice.getCloseDate());
@@ -187,7 +190,7 @@ public class HistoricalSPXPriceProvider {
                 dateElement = element.select("td:nth-child(1)").get(0);
                 priceElement = element.select("td:nth-child(6)").get(0);
             } catch (Exception e) {
-                logger.warn("Exception while reading table row, row was:\n{}", element);
+                logger.warn("Exception while reading table row, row {} was:\n{}", i, element);
                 continue;
             }
             String dateStr = dateElement.text();
