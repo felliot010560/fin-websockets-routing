@@ -5,11 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,6 +20,8 @@ import com.aleatory.common.domain.CondorPosition;
 import com.aleatory.common.domain.OptionPosition;
 import com.aleatory.websocketsrouting.WebsocketsRoutingApplication;
 import com.aleatory.websocketsrouting.exceptions.CouldNotConnectToPortfolioException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class MainRoutingRestController {
@@ -51,6 +56,13 @@ public class MainRoutingRestController {
     public void setTradingEnabled(@RequestBody boolean enable) {
         restTemplate.postForEntity(TRADING_SERVER_URL + "/trading-enabled", enable, Void.class);
     }
+    
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    @ExceptionHandler(CouldNotConnectToPortfolioException.class)
+    @ResponseBody String
+    handleBadRequest(HttpServletRequest req, Exception ex) {
+        return ex.getMessage();
+    } 
 
     @GetMapping("/positions")
     @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000",

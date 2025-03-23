@@ -8,6 +8,7 @@ public class CouldNotConnectToPortfolioException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public CouldNotConnectToPortfolioException() {
+        this("Portfolio data unavailable.");
     }
 
     public CouldNotConnectToPortfolioException(String message) {

@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -49,14 +48,15 @@ public class CacheConfig {
     @ConditionalOnProperty(value = "backend.messaging.transport", havingValue = "redis", matchIfMissing = true)
     public RedisTemplate<String, Object> redisTemplate(JedisConnectionFactory factory) {
         final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        StringRedisSerializer keySerializer = new StringRedisSerializer();
+        redisTemplate.setHashKeySerializer(keySerializer);
 
         ObjectMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
         mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         GenericJackson2JsonRedisSerializer valueSerializer = new GenericJackson2JsonRedisSerializer(mapper), defaultSerializer = new GenericJackson2JsonRedisSerializer(mapper);
         redisTemplate.setValueSerializer(valueSerializer);
         redisTemplate.setDefaultSerializer(defaultSerializer);
-        redisTemplate.setKeySerializer(new JdkSerializationRedisSerializer());
+        redisTemplate.setKeySerializer(keySerializer);
 
         factory.afterPropertiesSet();
         redisTemplate.setConnectionFactory(factory);
