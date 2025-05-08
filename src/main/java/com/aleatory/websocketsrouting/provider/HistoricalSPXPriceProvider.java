@@ -91,7 +91,7 @@ public class HistoricalSPXPriceProvider {
      */
     private void checkClosePriceAtClose() {
         logger.info("Checking close price.");
-        List<ClosePrice> closePrices = connectForClose(1);
+        List<ClosePrice> closePrices = connectToYahooForClose(1);
         if (closePrices != null && closePrices.size() > 0) {
             logger.info("Firing new close event for date {}: price: {}.", closePrices.get(0).getCloseDate(), closePrices.get(0).getPrice());
             SPXCloseReceivedEvent event = new SPXCloseReceivedEvent(this, closePrices.get(0).getPrice(), closePrices.get(0).getCloseDate(), false);
@@ -112,7 +112,7 @@ public class HistoricalSPXPriceProvider {
      */
     private void checkAllPreviousCloses() {
         logger.info("Checking previous closes 100 days back.");
-        List<ClosePrice> closePrices = connectForClose(100);
+        List<ClosePrice> closePrices = connectToYahooForClose(100);
         // Error occurred
         if (closePrices == null) {
             return;
@@ -149,9 +149,28 @@ public class HistoricalSPXPriceProvider {
      * @param scheduleNextCheck if true, schedule a recheck tonight and tomorrow
      *                          check
      */
-    private List<ClosePrice> connectForClose(int numDays) {
-        Document doc = connect();
-        if( doc == null ) {
+    private List<ClosePrice> connectToYahooForClose(int numDays) {
+        Document doc = null;
+
+        Elements elements = null;
+        // Try to connect 5 times before quitting in disgrace and disgust
+        for (int i = 0; (elements == null || elements.size() == 0) && i < 5; i++) {
+            try {
+                doc = Jsoup.connect("https://finance.yahoo.com/quote/%5EGSPC/history/").get();
+            } catch (IOException e) {
+                logger.info("Error connecting to SPX history page; {} retry.\nError was: {}", (i + 1 < 5) ? "will" : "will not", e.getMessage());
+                wait5Seconds();
+                continue;
+            }
+            elements = doc.select("#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr:nth-child(1) > td:nth-child(1)");
+            if (elements.size() == 0) {
+                logger.info("Error parsing SPX history page; {} retry.", (i + 1 < 5) ? "will" : "will not");
+                wait5Seconds();
+            }
+        }
+
+        if (doc == null || elements == null || elements.size() == 0) {
+            logger.info("Unable to read/parse SPX history page in 5 tries; giving it up.");
             return null;
         }
 
@@ -159,7 +178,7 @@ public class HistoricalSPXPriceProvider {
 
         // elements will hold a value for each row; we want the 1st and 6th cells in the
         // row, holding the date and price
-        Elements elements = doc.select("#__next > div.md\\:relative.md\\:bg-white > div.relative.flex > div.md\\:grid-cols-\\[1fr_72px\\].md2\\:grid-cols-\\[1fr_420px\\].grid.flex-1.grid-cols-1.px-4.pt-5.font-sans-v2.text-\\[\\#232526\\].antialiased.transition-all.xl\\:container.sm\\:px-6.md\\:gap-6.md\\:px-7.md\\:pt-10.md2\\:gap-8.md2\\:px-8.xl\\:mx-auto.xl\\:gap-10.xl\\:px-10 > div.min-w-0 > div.mb-4.md\\:mb-10 > div.mt-6.flex.flex-col.items-start.overflow-x-auto.p-0.md\\:pl-1 > table > tbody>tr");
+        elements = doc.select("#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr");
         LocalDate closeDateLocal;
         SimpleDateFormat parser = new SimpleDateFormat("MMM d, yyyy");
         Double price;
@@ -169,7 +188,7 @@ public class HistoricalSPXPriceProvider {
             Element priceElement = null;
             try {
                 dateElement = element.select("td:nth-child(1)").get(0);
-                priceElement = element.select("td:nth-child(2)").get(0);
+                priceElement = element.select("td:nth-child(6)").get(0);
             } catch (Exception e) {
                 logger.warn("Exception while reading table row, row {} was:\n{}", i, element);
                 continue;
@@ -194,40 +213,6 @@ public class HistoricalSPXPriceProvider {
 
         return closePrices;
 
-    }
-    
-    private Document connect() {
-        Document doc = null;
-
-        Elements elements = null;
-        // Try to connect 5 times before quitting in disgrace and disgust
-        for (int i = 0; (elements == null || elements.size() == 0) && i < 5; i++) {
-            try {
-                doc = Jsoup.connect("https://www.investing.com/indices/us-spx-500-historical-data")
-                        .header("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36")
-                        .header("Host", "www.investing.com")
-                        .header("Cache-Control", "no-cache")
-                        .header("Cookie", "__cf_bm=IiggSOluEITPr3O0Vqf.ZzoigCgiSoiCOTFK5yyMN3Q-1746659363-1.0.1.1-ktJtKtUnLf8mEnjWXTe7lpnZFOnyk3hTFnEsti7fEQnS8s1uIgE6wuPtil7y.AN3G9RUhpa8vTPjt.RfGYnBU_kogyyHi0cYEBtYtP_1dXu0O9HkQfUG8u7lp8r3fv2s; gcc=US; gsc=IL; inudid=81742163b7f59ebeb9fe807600304d06; invab=noadnews_0|ovpromo_2|regwall_1|stickytnb_0; smd=81742163b7f59ebeb9fe807600304d06-1746659362; udid=81742163b7f59ebeb9fe807600304d06; __cflb=0H28vY1WcQgbwwJpSw5YiDRSJhpofbwM554nBPNisLx")
-                        .timeout(1000*5)
-                        .get();
-            } catch (IOException e) {
-                logger.info("Error connecting to SPX history page; {} retry.\nError was: {}", (i + 1 < 5) ? "will" : "will not", e.getMessage());
-                wait5Seconds();
-                continue;
-            }
-            elements = doc.select("#__next > div.md\\:relative.md\\:bg-white > div.relative.flex > div.md\\:grid-cols-\\[1fr_72px\\].md2\\:grid-cols-\\[1fr_420px\\].grid.flex-1.grid-cols-1.px-4.pt-5.font-sans-v2.text-\\[\\#232526\\].antialiased.transition-all.xl\\:container.sm\\:px-6.md\\:gap-6.md\\:px-7.md\\:pt-10.md2\\:gap-8.md2\\:px-8.xl\\:mx-auto.xl\\:gap-10.xl\\:px-10 > div.min-w-0 > div.mb-4.md\\:mb-10 > div.mt-6.flex.flex-col.items-start.overflow-x-auto.p-0.md\\:pl-1 > table > tbody>tr:nth-child(1)");
-            if (elements.size() == 0) {
-                logger.info("Error parsing SPX history page; {} retry.", (i + 1 < 5) ? "will" : "will not");
-                wait5Seconds();
-            }
-        }
-
-        if (doc == null || elements == null || elements.size() == 0) {
-            logger.info("Unable to read/parse SPX history page in 5 tries; giving it up.");
-            return null;
-        }
-        
-        return doc;
     }
 
     private synchronized void wait5Seconds() {
