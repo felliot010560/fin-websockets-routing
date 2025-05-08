@@ -48,6 +48,12 @@ import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
 @Component
 public class HistoricalSPXPriceProvider {
     private static final Logger logger = LoggerFactory.getLogger(HistoricalSPXPriceProvider.class);
+    
+    private static final String URL_FOR_CLOSE = "https://finance.yahoo.com/quote/%5EGSPC/history/";
+    private static final String CSS_PATH_FOR_VALIDITY_CHECK = "#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr:nth-child(1) > td:nth-child(1)";
+    private static final String CSS_PATH_FOR_HISTORY_ROWS = "#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr";
+    private static final String CSS_PATH_FOR_DATE = "td:nth-child(1)";
+    private static final String CSS_PATH_FOR_PRICE = "td:nth-child(6)";
 
     @Autowired
     @Qualifier("messagingScheduler")
@@ -58,6 +64,16 @@ public class HistoricalSPXPriceProvider {
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+    
+    private SimpleDateFormat parser = new SimpleDateFormat("MMM d, yyyy");
+    
+    private static class BadDateStringException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        public BadDateStringException( String badDateString ) {
+            super(badDateString);
+        }
+    }
 
     @EventListener(ApplicationReadyEvent.class)
     private void scheduleYahooCloseFetch() {
@@ -89,9 +105,9 @@ public class HistoricalSPXPriceProvider {
      * routine the next time the service runs (presumably, not not necessarily, the
      * next morning).
      */
-    private void checkClosePriceAtClose() {
+    void checkClosePriceAtClose() {
         logger.info("Checking close price.");
-        List<ClosePrice> closePrices = connectToYahooForClose(1);
+        List<ClosePrice> closePrices = connectForClose(1);
         if (closePrices != null && closePrices.size() > 0) {
             logger.info("Firing new close event for date {}: price: {}.", closePrices.get(0).getCloseDate(), closePrices.get(0).getPrice());
             SPXCloseReceivedEvent event = new SPXCloseReceivedEvent(this, closePrices.get(0).getPrice(), closePrices.get(0).getCloseDate(), false);
@@ -112,7 +128,7 @@ public class HistoricalSPXPriceProvider {
      */
     private void checkAllPreviousCloses() {
         logger.info("Checking previous closes 100 days back.");
-        List<ClosePrice> closePrices = connectToYahooForClose(100);
+        List<ClosePrice> closePrices = connectForClose(100);
         // Error occurred
         if (closePrices == null) {
             return;
@@ -149,20 +165,53 @@ public class HistoricalSPXPriceProvider {
      * @param scheduleNextCheck if true, schedule a recheck tonight and tomorrow
      *                          check
      */
-    private List<ClosePrice> connectToYahooForClose(int numDays) {
+    private List<ClosePrice> connectForClose(int numDays) {
+        Document doc = doConnect();
+        
+        if( doc == null ) {
+            return null;
+        }
+
+        List<ClosePrice> closePrices = new ArrayList<>();
+
+        // elements will hold a value for each row; we want the 1st and 6th cells in the
+        // row, holding the date and price
+        Elements elements = doc.select(CSS_PATH_FOR_HISTORY_ROWS);
+
+        for (int i = 0; i < numDays && i < elements.size(); i++) {
+            Element element = elements.get(i);
+            ClosePrice closePrice;
+            try {
+                closePrice = getClosePriceFromHTML(element);
+            } catch (BadDateStringException e) {
+                logger.info("Could not parse Yahoo closing date string {}", e.getMessage());
+                return closePrices;
+            } catch (RuntimeException e) {
+                continue;
+            }
+            closePrices.add(closePrice);
+        }
+
+        return closePrices;
+
+    }
+    
+    private Document doConnect() {
         Document doc = null;
 
         Elements elements = null;
         // Try to connect 5 times before quitting in disgrace and disgust
         for (int i = 0; (elements == null || elements.size() == 0) && i < 5; i++) {
             try {
-                doc = Jsoup.connect("https://finance.yahoo.com/quote/%5EGSPC/history/").get();
+                doc = Jsoup.connect(URL_FOR_CLOSE)
+                        .header("User-Agent", "Mozilla/5.0")
+                        .get();
             } catch (IOException e) {
                 logger.info("Error connecting to SPX history page; {} retry.\nError was: {}", (i + 1 < 5) ? "will" : "will not", e.getMessage());
                 wait5Seconds();
                 continue;
             }
-            elements = doc.select("#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr:nth-child(1) > td:nth-child(1)");
+            elements = doc.select(CSS_PATH_FOR_VALIDITY_CHECK);
             if (elements.size() == 0) {
                 logger.info("Error parsing SPX history page; {} retry.", (i + 1 < 5) ? "will" : "will not");
                 wait5Seconds();
@@ -173,45 +222,8 @@ public class HistoricalSPXPriceProvider {
             logger.info("Unable to read/parse SPX history page in 5 tries; giving it up.");
             return null;
         }
-
-        List<ClosePrice> closePrices = new ArrayList<>();
-
-        // elements will hold a value for each row; we want the 1st and 6th cells in the
-        // row, holding the date and price
-        elements = doc.select("#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr");
-        LocalDate closeDateLocal;
-        SimpleDateFormat parser = new SimpleDateFormat("MMM d, yyyy");
-        Double price;
-        for (int i = 0; i < numDays && i < elements.size(); i++) {
-            Element element = elements.get(i);
-            Element dateElement = null;
-            Element priceElement = null;
-            try {
-                dateElement = element.select("td:nth-child(1)").get(0);
-                priceElement = element.select("td:nth-child(6)").get(0);
-            } catch (Exception e) {
-                logger.warn("Exception while reading table row, row {} was:\n{}", i, element);
-                continue;
-            }
-            String dateStr = dateElement.text();
-            ;
-            Date closeDate;
-            try {
-                closeDate = parser.parse(dateStr);
-            } catch (ParseException e) {
-                logger.info("Could not parse Yahoo closing date string {}", dateStr);
-                return closePrices;
-            }
-            closeDateLocal = LocalDate.ofInstant(closeDate.toInstant(), ZoneId.systemDefault());
-            logger.debug("Yahoo close date is {}, converted to local: {}", dateElement.text(), closeDateLocal);
-            String priceStr = priceElement.text();
-            priceStr = priceStr.replaceAll(",", "");
-            logger.debug("Yahoo close is {}", priceStr);
-            price = Double.parseDouble(priceStr);
-            closePrices.add(new ClosePrice(closeDateLocal, price));
-        }
-
-        return closePrices;
+        
+        return doc;
 
     }
 
@@ -221,6 +233,36 @@ public class HistoricalSPXPriceProvider {
         } catch (InterruptedException e) {
             logger.warn("Five second wait interrupted.");
         }
+    }
+    
+    private ClosePrice getClosePriceFromHTML(Element element) {
+        Element dateElement = null;
+        Element priceElement = null;
+        LocalDate closeDateLocal;
+        try {
+            dateElement = element.select(CSS_PATH_FOR_DATE).get(0);
+            priceElement = element.select(CSS_PATH_FOR_PRICE).get(0);
+        } catch (Exception e) {
+            logger.warn("Exception while reading table row, row {} was:\n{}", element);
+            throw new RuntimeException(e);
+        }
+        String dateStr = dateElement.text();
+        Date closeDate;
+        
+        try {
+            closeDate = parser.parse(dateStr);
+        } catch (ParseException e) {
+            throw new BadDateStringException(dateStr);
+        }
+
+
+        closeDateLocal = LocalDate.ofInstant(closeDate.toInstant(), ZoneId.systemDefault());
+        logger.debug("Yahoo close date is {}, converted to local: {}", dateElement.text(), closeDateLocal);
+        String priceStr = priceElement.text();
+        priceStr = priceStr.replaceAll(",", "");
+        logger.debug("Yahoo close is {}", priceStr);
+        Double price = Double.parseDouble(priceStr);
+        return new ClosePrice(closeDateLocal, price);
     }
 
 }
