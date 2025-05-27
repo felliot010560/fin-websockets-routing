@@ -17,6 +17,7 @@ import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
 
 @ExtendWith(MockitoExtension.class)
 class HistoricalSPXPriceProviderTest {
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HistoricalSPXPriceProviderTest.class);
     
     HistoricalSPXPriceProvider cut;
