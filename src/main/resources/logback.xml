@@ -7,10 +7,10 @@
     </appender>
     
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/${environment:-prod}/portfolio.log</file>
+        <file>logs/${environment:-prod}/backend.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
           <!-- daily rollover -->
-          <fileNamePattern>logs/${environment:-prod}/portfolio.%d{yyyy-MM-dd}.log</fileNamePattern>
+          <fileNamePattern>logs/${environment:-prod}/backend.%d{yyyy-MM-dd}.log</fileNamePattern>
     
           <!-- keep 7 days' worth of history capped at 1.4GB total size -->
           <maxHistory>7</maxHistory>

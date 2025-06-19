@@ -205,6 +205,7 @@ public class HistoricalSPXPriceProvider {
             try {
                 doc = Jsoup.connect(URL_FOR_CLOSE)
                         .header("User-Agent", "Mozilla/5.0")
+                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
                         .get();
             } catch (IOException e) {
                 logger.info("Error connecting to SPX history page; {} retry.\nError was: {}", (i + 1 < 5) ? "will" : "will not", e.getMessage());
