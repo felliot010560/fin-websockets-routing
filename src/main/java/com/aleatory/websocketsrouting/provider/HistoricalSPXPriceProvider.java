@@ -50,7 +50,8 @@ public class HistoricalSPXPriceProvider {
     private static final Logger logger = LoggerFactory.getLogger(HistoricalSPXPriceProvider.class);
     
     private static final String URL_FOR_CLOSE = "https://finance.yahoo.com/quote/%5EGSPC/history/";
-    private static final String CSS_PATH_FOR_VALIDITY_CHECK = "#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr:nth-child(1) > td:nth-child(1)";
+                                                              
+    private static final String CSS_PATH_FOR_VALIDITY_CHECK = "#nimbus-app > section > section > section > section > div.container > div.table-container > table > tbody > tr";
     private static final String CSS_PATH_FOR_HISTORY_ROWS = "#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr";
     private static final String CSS_PATH_FOR_DATE = "td:nth-child(1)";
     private static final String CSS_PATH_FOR_PRICE = "td:nth-child(6)";
