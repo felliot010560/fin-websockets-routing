@@ -52,7 +52,7 @@ public class HistoricalSPXPriceProvider {
     private static final String URL_FOR_CLOSE = "https://finance.yahoo.com/quote/%5EGSPC/history/";
                                                               
     private static final String CSS_PATH_FOR_VALIDITY_CHECK = "#nimbus-app > section > section > section > section > div.container > div.table-container > table > tbody > tr";
-    private static final String CSS_PATH_FOR_HISTORY_ROWS = "#nimbus-app > section > section > section > article > div.container > div.table-container > table > tbody > tr";
+    private static final String CSS_PATH_FOR_HISTORY_ROWS = "#nimbus-app > section > section > section > section > div.container > div.table-container > table > tbody > tr";
     private static final String CSS_PATH_FOR_DATE = "td:nth-child(1)";
     private static final String CSS_PATH_FOR_PRICE = "td:nth-child(6)";
 
@@ -98,7 +98,7 @@ public class HistoricalSPXPriceProvider {
     }
 
     /**
-     * At 3:01 (or 12:01) on a short day, get the top (today's) row in the Yahoo
+     * At 3:01 (or 12:01 on a short day), get the top (today's) row in the Yahoo
      * Finance SPX historical quotes page.
      * 
      * Closes from this code are considered non-final--they might change later in
