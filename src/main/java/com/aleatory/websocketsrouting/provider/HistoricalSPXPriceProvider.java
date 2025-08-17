@@ -75,6 +75,11 @@ public class HistoricalSPXPriceProvider {
             super(badDateString);
         }
     }
+    
+    public ClosePrice fetchTodaysClose() {
+        ClosePrice closePrice = checkClosePriceAtClose();
+        return closePrice;
+    }
 
     @EventListener(ApplicationReadyEvent.class)
     private void scheduleYahooCloseFetch() {
@@ -106,14 +111,16 @@ public class HistoricalSPXPriceProvider {
      * routine the next time the service runs (presumably, not not necessarily, the
      * next morning).
      */
-    void checkClosePriceAtClose() {
+    ClosePrice checkClosePriceAtClose() {
         logger.info("Checking close price.");
         List<ClosePrice> closePrices = connectForClose(1);
         if (closePrices != null && closePrices.size() > 0) {
             logger.info("Firing new close event for date {}: price: {}.", closePrices.get(0).getCloseDate(), closePrices.get(0).getPrice());
             SPXCloseReceivedEvent event = new SPXCloseReceivedEvent(this, closePrices.get(0).getPrice(), closePrices.get(0).getCloseDate(), false);
             applicationEventPublisher.publishEvent(event);
+            return closePrices.get(0);
         }
+        return null;
     }
 
     /**

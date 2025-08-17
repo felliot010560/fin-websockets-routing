@@ -19,7 +19,9 @@ import org.springframework.web.client.RestTemplate;
 import com.aleatory.common.domain.CondorPosition;
 import com.aleatory.common.domain.OptionPosition;
 import com.aleatory.websocketsrouting.WebsocketsRoutingApplication;
+import com.aleatory.websocketsrouting.domain.ClosePrice;
 import com.aleatory.websocketsrouting.exceptions.CouldNotConnectToPortfolioException;
+import com.aleatory.websocketsrouting.provider.HistoricalSPXPriceProvider;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -103,6 +105,20 @@ public class MainRoutingRestController {
     @ResponseBody
     public void restart() {
         WebsocketsRoutingApplication.restart(WebsocketsRoutingApplication.class);
+    }
+    
+    @Autowired
+    private HistoricalSPXPriceProvider historicalSPXPriceProvider;
+    
+    /**
+     * Used when we missed the close for one reason or another and want to scrape the website for it again.
+     */
+    @PostMapping("/todays-close")
+    @CrossOrigin(origins = { "http://localhost:3000", "http://192.168.68.51:3030" }, allowCredentials = "true")
+    @ResponseBody
+    public ClosePrice fetchTodaysClose() {
+        ClosePrice closePrice = historicalSPXPriceProvider.fetchTodaysClose();
+        return closePrice;
     }
 
 }
