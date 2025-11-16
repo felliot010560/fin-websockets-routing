@@ -3,6 +3,7 @@ package com.aleatory.websocketsrouting.provider;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -84,7 +85,12 @@ public class HistoricalSPXPriceProvider {
     @EventListener(ApplicationReadyEvent.class)
     private void scheduleYahooCloseFetch() {
         scheduleCheckPriceAtClose();
-        checkAllPreviousCloses();
+        //Check previous closes 1 minute after startup, otherwise the portfolio server might not have started up yet
+        //and will miss the close event and not correctly expire trades.
+        scheduler.schedule(() -> {
+            checkAllPreviousCloses();
+        }, Instant.now().plus(Duration.of(1, ChronoUnit.MINUTES)));
+       
     }
 
     private void scheduleCheckPriceAtClose() {
@@ -192,8 +198,8 @@ public class HistoricalSPXPriceProvider {
             try {
                 closePrice = getClosePriceFromHTML(element);
             } catch (BadDateStringException e) {
-                logger.info("Could not parse Yahoo closing date string {}", e.getMessage());
-                return closePrices;
+                logger.warn("Could not parse Yahoo closing date string {}", e.getMessage());
+                continue;
             } catch (RuntimeException e) {
                 continue;
             }
