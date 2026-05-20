@@ -34,11 +34,15 @@ public class CacheConfig {
 
     @Value("${spring.redis.port}")
     private int REDIS_PORT;
+    
+    @Value("${spring.redis.password}")
+    private String REDIS_PASSWORD;
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         logger.info("Will connect to Redis server on {}:{}", REDIS_HOSTNAME, REDIS_PORT);
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(REDIS_HOSTNAME, REDIS_PORT);
+        configuration.setPassword(REDIS_PASSWORD);
         JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder().build();
         JedisConnectionFactory factory = new JedisConnectionFactory(configuration, jedisClientConfiguration);
         return factory;
