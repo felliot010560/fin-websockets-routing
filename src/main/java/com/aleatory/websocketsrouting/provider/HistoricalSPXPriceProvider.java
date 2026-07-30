@@ -175,9 +175,7 @@ public class HistoricalSPXPriceProvider {
      * shouldn't (i.e., the last SPX tick was .999% up or down, then the close is
      * 1.0% up or down). In V1 of this feature, we get the close from the Yahoo web
      * page.
-     * 
-     * @param scheduleNextCheck if true, schedule a recheck tonight and tomorrow
-     *                          check
+     * @param numDays number of days back to fetch
      */
     private List<ClosePrice> connectForClose(int numDays) {
         Document doc = doConnect();
