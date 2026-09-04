@@ -36,9 +36,13 @@ public class BasicAuthWebSecurityConfiguration {
     @Bean
     @Profile("!dev")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").hasRole("USER_ROLE")).formLogin(Customizer.withDefaults())
-                .httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
-        return http.build();
+//        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").hasRole("USER_ROLE")).formLogin(Customizer.withDefaults())
+//                .httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
+//        return http.build();
+        //TODO: Security disabled: reenable even on Tailscale?
+        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll().anyRequest().authenticated())
+        .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).httpBasic(authEntry -> authEntry.authenticationEntryPoint(authEntryPoint));
+return http.build();
     }
 
     @Bean
@@ -52,6 +56,8 @@ public class BasicAuthWebSecurityConfiguration {
     @Bean
     @Profile("!dev")
     public InMemoryUserDetailsManager userDetailsService() {
+        String envUser = System.getenv().get("CONDORS_APP_USERNAME");
+        logger.info("Condors app username = {}, user name = {}", envUser, username);
         UserDetails user = User.withUsername(username).password(passwordEncoder().encode(password)).roles("USER_ROLE").build();
         return new InMemoryUserDetailsManager(user);
     }

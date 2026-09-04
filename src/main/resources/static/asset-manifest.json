@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/static/css/main.5440e38b.css",
-    "main.js": "/static/js/main.34c106b8.js",
+    "main.js": "/static/js/main.48d7c33c.js",
     "static/js/453.a7c72b57.chunk.js": "/static/js/453.a7c72b57.chunk.js",
     "static/media/California-condor.jpg": "/static/media/California-condor.fa52bbc09f444e4ada0a.jpg",
     "index.html": "/index.html",
     "main.5440e38b.css.map": "/static/css/main.5440e38b.css.map",
-    "main.34c106b8.js.map": "/static/js/main.34c106b8.js.map",
+    "main.48d7c33c.js.map": "/static/js/main.48d7c33c.js.map",
     "453.a7c72b57.chunk.js.map": "/static/js/453.a7c72b57.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.5440e38b.css",
-    "static/js/main.34c106b8.js"
+    "static/js/main.48d7c33c.js"
   ]
 }

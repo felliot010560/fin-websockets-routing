@@ -39,21 +39,21 @@ public class MainRoutingRestController {
     private RestTemplate restTemplate;
 
     @GetMapping("/trading-halt-override")
-    @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000" }, allowCredentials = "true")
+    @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3030", "http://192.168.68.57:3000" }, allowCredentials = "true")
     @ResponseBody
     public boolean getTradingHaltOverridden() {
         return restTemplate.getForObject(TRADING_SERVER_URL + "/trading-halt-override", Boolean.class);
     }
 
     @PostMapping("/trading-halt-override")
-    @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000" }, allowCredentials = "true")
+    @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3030", "http://192.168.68.57:3000" }, allowCredentials = "true")
     @ResponseBody
     public void setTradingHaltOverridden(@RequestBody boolean override) {
         restTemplate.postForEntity(TRADING_SERVER_URL + "/trading-halt-override", override, Void.class);
     }
 
     @PostMapping("/trading-enabled")
-    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000" }, allowCredentials = "true")
+    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.57:3000", "http://mac-mini:3000" }, allowCredentials = "true")
     @ResponseBody
     public void setTradingEnabled(@RequestBody boolean enable) {
         restTemplate.postForEntity(TRADING_SERVER_URL + "/trading-enabled", enable, Void.class);
@@ -67,8 +67,8 @@ public class MainRoutingRestController {
     } 
 
     @GetMapping("/positions")
-    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000",
-            "http://192.168.68.55:3030" }, allowCredentials = "true")
+    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.57:3000",
+            "http://192.168.68.55:3030", "http://mac-mini:8090" }, allowCredentials = "true")
     @ResponseBody
     public CondorPosition[] getPositions() {
         String url = PORTFOLIO_SERVER_URL + "/positions";
@@ -93,7 +93,7 @@ public class MainRoutingRestController {
     }
 
     @PostMapping("/reload-positions")
-    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.55:3000",
+    @CrossOrigin(origins = { "https://condors.aleatorysw.com:8443", "http://localhost:3000", "http://localhost:3030", "http://192.168.68.57:3000",
             "http://192.168.68.55:3030" }, allowCredentials = "true")
     @ResponseBody
     public void reloadPortfolio() {
