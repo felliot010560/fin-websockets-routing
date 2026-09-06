@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.aleatory.common.domain.ClosePrice;
 import com.aleatory.common.domain.CondorPosition;
 import com.aleatory.common.domain.OptionPosition;
 import com.aleatory.websocketsrouting.WebsocketsRoutingApplication;
-import com.aleatory.websocketsrouting.domain.ClosePrice;
 import com.aleatory.websocketsrouting.exceptions.CouldNotConnectToPortfolioException;
 import com.aleatory.websocketsrouting.provider.HistoricalSPXPriceProvider;
 

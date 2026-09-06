@@ -29,10 +29,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
+import com.aleatory.common.domain.ClosePrice;
 import com.aleatory.common.util.TradingDays;
 import com.aleatory.websocketsrouting.dao.SPXHistoryDao;
-import com.aleatory.websocketsrouting.domain.ClosePrice;
 import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
+import com.aleatory.websocketsrouting.events.SendLastSPXCloseEvent;
 
 /**
  * This class checks to verify that we haven't missed any closes for SPX (which
@@ -56,6 +57,8 @@ public class HistoricalSPXPriceProvider {
     private static final String CSS_PATH_FOR_HISTORY_ROWS = "#nimbus-app > main > section > section > section > section > div.container > div.table-container > table > tbody > tr";
     private static final String CSS_PATH_FOR_DATE = "td:nth-child(1)";
     private static final String CSS_PATH_FOR_PRICE = "td:nth-child(6)";
+    
+    private static final Duration ONE_MINUTE = Duration.of(1, ChronoUnit.MINUTES);
 
     @Autowired
     @Qualifier("messagingScheduler")
@@ -89,8 +92,20 @@ public class HistoricalSPXPriceProvider {
         //and will miss the close event and not correctly expire trades.
         scheduler.schedule(() -> {
             checkAllPreviousCloses();
-        }, Instant.now().plus(Duration.of(1, ChronoUnit.MINUTES)));
+        }, Instant.now().plus(ONE_MINUTE));
        
+    }
+    
+    
+    /**
+     * Send the last SPX close every minute, beginning a minute after we start.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    private void scheduleCloseSendEveryMinute() {
+        scheduler.scheduleAtFixedRate( () -> {
+            SendLastSPXCloseEvent event = new SendLastSPXCloseEvent(this, dao.getLastSPXClose());
+            applicationEventPublisher.publishEvent(event);
+        }, Instant.now().plus(ONE_MINUTE), ONE_MINUTE);
     }
 
     private void scheduleCheckPriceAtClose() {
@@ -99,7 +114,7 @@ public class HistoricalSPXPriceProvider {
             nextClose = TradingDays.nextSPXCloseTime();
         }
         // Make it 3:01 (or 12:01 for a half-day).
-        nextClose = nextClose.plus(1, ChronoUnit.MINUTES);
+        nextClose = nextClose.plus(ONE_MINUTE);
         Instant closeInstant = nextClose.toInstant();
         logger.info("Will get next close from web at {}", nextClose);
         scheduler.schedule(() -> {

@@ -18,7 +18,7 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.aleatory.websocketsrouting.domain.ClosePrice;
+import com.aleatory.common.domain.ClosePrice;
 import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
 
 @Repository

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.aleatory.common.domain.WireClose;
 import com.aleatory.common.messaging.PubSubMessagingOperations;
 import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
+import com.aleatory.websocketsrouting.events.SendLastSPXCloseEvent;
 
 /**
  * Sends messages to the backend services that depend on prices. Depending on
@@ -28,6 +29,10 @@ public class WebsocketsRoutingMessagingController {
     @Autowired
     private PubSubMessagingOperations messagingOperations;
 
+    /**
+     * This handler sends a newly-found SPX close, whether the most recent one or one further back in time.
+     * @param event
+     */
     @EventListener
     private void sendSPXClose(SPXCloseReceivedEvent event) {
         WireClose wireClose = new WireClose();
@@ -36,5 +41,15 @@ public class WebsocketsRoutingMessagingController {
         wireClose.setClose(event.getPrice());
         logger.info("Sending SPX close of {} for day {}", wireClose.getClose(), wireClose.getForDay());
         messagingOperations.publishMessage("/topic/prices.spx.close", wireClose);
+    }
+    
+    /**
+     * This handler sends the previous close (before today) every minute.
+     * @param event
+     */
+    @EventListener
+    private void sendLastSPXClose(SendLastSPXCloseEvent event) {
+        logger.info("Sending old SPX close of {}.", event.getLastClose());
+        messagingOperations.publishMessage("/topic/prices.spx.last-close", event.getLastClose());
     }
 }
