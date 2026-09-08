@@ -19,6 +19,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.aleatory.common.domain.ClosePrice;
+import com.aleatory.common.util.TradingDays;
 import com.aleatory.websocketsrouting.events.SPXCloseReceivedEvent;
 
 @Repository
@@ -29,6 +30,9 @@ public class SPXHistoryDao {
     private NamedParameterJdbcTemplate template;
 
     private static final String LAST_SPX_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date=(SELECT MAX(trade_date) FROM spx_history WHERE trade_date < CURRENT_DATE);";
+    private static final String NEXT_TO_LAST_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date="
+            + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <"
+            + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date < CURRENT_DATE));";
 
     private static final String INSERT_SPX_CLOSE_SQL = "INSERT INTO public.spx_history (trade_date, close, is_final) VALUES (:forDate, :price, :finalPrice)\n" //
             + "	ON CONFLICT (trade_date) " //
@@ -36,8 +40,23 @@ public class SPXHistoryDao {
 
     private static final String ALL_SPX_CLOSE_DATES_QUERY = "SELECT trade_date, close, is_final FROM spx_history ORDER BY trade_date DESC;";
 
+    /**
+     * If today is not a trading day, use the next-to-last SPX close. (Last close is considered the last price.)
+     * If today is a trading day and it's before end of trading, use the last SPX close (which will be from the previous trading day).
+     * If today is a trading day it's after the end of trading, the last close will be today's, added at close, but we want the last trading day before, so use the next-to-last.
+     * @return
+     */
     public Double getLastSPXClose() {
-        Double lastSPXClose = template.queryForObject(LAST_SPX_CLOSE_QUERY, Collections.emptyMap(), Double.class);
+        String query;
+        if( !TradingDays.isTradingDay() ) {
+            query = NEXT_TO_LAST_CLOSE_QUERY;
+        } else if( !TradingDays.tradingCompleteForToday() ) {
+            query = LAST_SPX_CLOSE_QUERY;
+        } else {
+            query = NEXT_TO_LAST_CLOSE_QUERY;
+        }
+
+        Double lastSPXClose = template.queryForObject(query, Collections.emptyMap(), Double.class);
         return lastSPXClose;
     }
 
