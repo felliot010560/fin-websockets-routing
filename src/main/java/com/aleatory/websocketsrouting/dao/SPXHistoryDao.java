@@ -29,10 +29,10 @@ public class SPXHistoryDao {
     @Autowired
     private NamedParameterJdbcTemplate template;
 
-    private static final String LAST_SPX_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date=(SELECT MAX(trade_date) FROM spx_history WHERE trade_date < CURRENT_DATE);";
+    private static final String LAST_SPX_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date=(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <= CURRENT_DATE);";
     private static final String NEXT_TO_LAST_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date="
             + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <"
-            + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date < CURRENT_DATE));";
+            + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <= CURRENT_DATE));";
 
     private static final String INSERT_SPX_CLOSE_SQL = "INSERT INTO public.spx_history (trade_date, close, is_final) VALUES (:forDate, :price, :finalPrice)\n" //
             + "	ON CONFLICT (trade_date) " //
