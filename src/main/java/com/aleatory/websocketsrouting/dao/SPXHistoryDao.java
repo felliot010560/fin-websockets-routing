@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,9 @@ public class SPXHistoryDao {
     @Autowired
     private NamedParameterJdbcTemplate template;
 
-    private static final String LAST_SPX_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date=(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <= CURRENT_DATE);";
-    private static final String NEXT_TO_LAST_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date="
+    static final String HAS_CLOSE_FOR_TODAY_QUERY = "SELECT EXISTS(SELECT * from spx_history WHERE trade_date = CURRENT_DATE);";
+    static final String LAST_SPX_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date=(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <= CURRENT_DATE);";
+    static final String NEXT_TO_LAST_CLOSE_QUERY = "SELECT close FROM spx_history WHERE trade_date="
             + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <"
             + "	(SELECT MAX(trade_date) FROM spx_history WHERE trade_date <= CURRENT_DATE));";
 
@@ -42,18 +44,22 @@ public class SPXHistoryDao {
 
     /**
      * If today is not a trading day, use the next-to-last SPX close. (Last close is considered the last price.)
-     * If today is a trading day and it's before end of trading, use the last SPX close (which will be from the previous trading day).
-     * If today is a trading day it's after the end of trading, the last close will be today's, added at close, but we want the last trading day before, so use the next-to-last.
+     * If today is a trading day and there's no close for today yet, use the last SPX close (which will be from the previous trading day).
+     * If today is a trading day and there's a close price for today, the last close will be today's, added at close, but we want the last trading day before, so use the next-to-last.
      * @return
      */
     public Double getLastSPXClose() {
         String query;
-        if( !TradingDays.isTradingDay() ) {
+
+        if (!TradingDays.isTradingDay()) {
             query = NEXT_TO_LAST_CLOSE_QUERY;
-        } else if( !TradingDays.tradingCompleteForToday() ) {
-            query = LAST_SPX_CLOSE_QUERY;
         } else {
-            query = NEXT_TO_LAST_CLOSE_QUERY;
+            Boolean hasCloseForToday = template.queryForObject(HAS_CLOSE_FOR_TODAY_QUERY, Collections.emptyMap(), Boolean.class);
+            if (!hasCloseForToday && LocalTime.now().isAfter(TradingDays.getStartTime())) {
+                query = LAST_SPX_CLOSE_QUERY;
+            } else {
+                query = NEXT_TO_LAST_CLOSE_QUERY;
+            }
         }
 
         Double lastSPXClose = template.queryForObject(query, Collections.emptyMap(), Double.class);
